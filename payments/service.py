@@ -31,17 +31,23 @@ class RedirectURLProcess:
             order.status = "success"
             order.payment_status = "success"
             order.trans_id = self.requests_data.get('tran_id')
+            data['url'] = 'http://localhost:3000/status-success/'
+            data['status'] = 'valid'
 
         if self.requests_data.get('status') == "FAILED":
             order = Order.objects.filter(id=self.requests_data.get('value_a')).first()
             order.payment_status = "faild"
             order.trans_id = self.requests_data.get('tran_id')
+            data['url'] = 'http://localhost:3000/status-failed/'
+            data['status'] = 'failed'
 
         if self.requests_data.get('status') == "CANCELLED":
             order = Order.objects.filter(id=self.requests_data.get('value_a')).first()
             order.payment_status = "cancel"
             order.trans_id = self.requests_data.get('tran_id')
+            data['url'] = 'http://localhost:3000/status-cancel/'
+            data['status'] = 'cancel'
 
         order.save()
         
-        return self.requests_data
+        return data

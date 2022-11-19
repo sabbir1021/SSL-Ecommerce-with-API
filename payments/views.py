@@ -6,6 +6,7 @@ from .serializers import OrderSerializer
 from django.views.decorators.csrf import csrf_exempt
 from django.utils.decorators import method_decorator
 from .service import SslEcommerceProcess, RedirectURLProcess
+from django.http import HttpResponseRedirect
 # Create your views here.
 
 class Payment(APIView):
@@ -16,7 +17,7 @@ class Payment(APIView):
 
     def post(self, request, format=None):
         data = request.data
-        data['total_price'] = data['price'] * data['quantity']
+        data['total_price'] = int(data['price']) * int(data['quantity'])
         data['status'] = 'due'
         serializer = OrderSerializer(data=data)
 
@@ -31,7 +32,6 @@ class Payment(APIView):
         return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
 
 
-
 @method_decorator(csrf_exempt, name='dispatch')
 class Status(APIView):
     def post(self, request, format=None):
@@ -39,4 +39,9 @@ class Status(APIView):
         data = data_dict.dict()
         process_data = RedirectURLProcess(data)()
         response = process_data
-        return Response(response, status=status.HTTP_201_CREATED)
+        if response['status'] == 'valid':
+            return HttpResponseRedirect(redirect_to=response['url'])
+        if response['status'] == 'failed':
+            return HttpResponseRedirect(redirect_to=response['url'])
+        if response['status'] == 'cancel':
+            return HttpResponseRedirect(redirect_to=response['url'])
